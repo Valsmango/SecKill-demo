@@ -1,0 +1,36 @@
+1， MVC三层架构：Model  View  Controller
+        Controller： （1）类似于Servlet，接收用户的请求，进行重定向或者转发（视图跳转）；
+                    （2）交给Service业务层去进行业务逻辑操作
+        Model： （1）控制业务操作，CRUD；
+                （2）也就是Service + JavaBean，通过JDBC等中间件和数据库进行交互；
+                （3）这些经过业务逻辑处理后的信息就可以交给View进行展示
+                Service（业务逻辑、业务操作层）：业务逻辑操作
+                JavaBean：也就是实体pojo、Entity，可以直接通过JDBC的程序接口（中间件）和数据库进行交互，一个pojo文件夹下的实体类，就对应一张数据库中的表
+                Dao（数据持久层）：介于pojo和数据库中间件JDBC之间，让数据库操作和JavaBean进一步降低耦合（目前用的是MyBatis那一套持久层框架）
+        View：（1）类似于JSP，主要用于展示数据、为客户端响应内容（从Controller拿数据）
+    Ref：狂神JavaWeb - 22、23 - JavaBean、MVC三层架构
+
+2，  为什么要有JDBC？
+        因为数据库有很多种，直接用JDBC；
+        也就是Dao/Mapper层 --> JDBC --> MySQL/Oracle
+    JDBC的操作：
+        如果是用的原生的JDBC/mysql的jar包，调包并创建对应的对象实例来连接数据库的话（类似于网络编程的Socket，调包），固定步骤为
+        （1）加载数据库的驱动；
+        （2）连接数据库（url，username，password）得到connection对象；通过connection创建Statement对象statement；（也可以是预编译PreparedStatement对象，差别不大）
+        （3）编写SQL语句，通过statement.executeQuery(str)/executeUpdate(str)执行，用ResultSet对象来接收查询的结果；
+        （4）关闭/注销statement对象，关闭数据库连接，然后释放资源；
+    在这里的项目如何做？
+        在application.yml（也就是properties）中进行配置
+    什么是MyBatis？
+        持久层的框架，避免自己去写JDBC代码、手动设置参数、获取结果集；
+    为什么用MyBatis？
+        因为原生的JDBC把Java代码和SQL语句混在一起的，MyBatis相当于在JDBC上套了一层，目的就是为了让SQL语句和Java业务代码分离；
+    Ref：狂神JavaWeb - 28 - JDBC复习
+
+3，
+
+
+
+
+
+
