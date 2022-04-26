@@ -2,6 +2,9 @@ package com.ymt.seckill.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.ymt.seckill.pojo.Goods;
+import com.ymt.seckill.vo.GoodsVo;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,9 @@ import com.ymt.seckill.pojo.Goods;
  */
 public interface IGoodsService extends IService<Goods> {
 
+    /**
+     * 功能描述：
+     * @return
+     */
+    List<GoodsVo> findGoodsVo();
 }

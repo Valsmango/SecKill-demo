@@ -2,6 +2,10 @@ package com.ymt.seckill.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ymt.seckill.pojo.Goods;
+import com.ymt.seckill.vo.GoodsVo;
+import org.springframework.context.annotation.Bean;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +17,9 @@ import com.ymt.seckill.pojo.Goods;
  */
 public interface GoodsMapper extends BaseMapper<Goods> {
 
+    /**
+     * 功能描述：获取商品列表
+     * @return
+     */
+    List<GoodsVo> findGoodsVo();
 }

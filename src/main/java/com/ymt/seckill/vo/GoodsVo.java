@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 功能描述：创建商品列表页面
+ * 功能描述：创建商品列表页面（建表只建了商品、订单等信息）
  */
 @Data
 @NoArgsConstructor
