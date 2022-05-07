@@ -25,12 +25,12 @@ public class WebConfig implements WebMvcConfigurer {
         resolvers.add(userArgumentResolver);
     }
 
-    // 用于解决：https://www.cnblogs.com/maoliyy/p/14889226.html
 
+    // 最先出现这个问题是在用firefox浏览器进入登录页面，然后查找了https://www.cnblogs.com/maoliyy/p/14889226.html
+    // 后来，视频中22集18min左右，在商品详情页，图片无法展示，也是因为自定义了这个WebConfig类，约定（自定义）大于配置！！！所以先走自定义的这个类
     private static final String[] CLASSPATH_RESOURCE_LOCATIONS = {
             "classpath:/META-INF/resources/", "classpath:/resources/",
             "classpath:/static/", "classpath:/public/" };
-
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
