@@ -1,5 +1,4 @@
 spring:
-  mvc.st
   # thymeleaf配置
   thymeleaf:
     # 关闭缓存

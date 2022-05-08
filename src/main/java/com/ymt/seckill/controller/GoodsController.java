@@ -3,6 +3,7 @@ package com.ymt.seckill.controller;
 import com.ymt.seckill.pojo.User;
 import com.ymt.seckill.service.IGoodsService;
 import com.ymt.seckill.service.IUserService;
+import com.ymt.seckill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,7 @@ import org.thymeleaf.util.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 
 @Controller
 @RequestMapping("/goods")
@@ -65,7 +67,27 @@ public class GoodsController {
     @RequestMapping("/toDetail/{goodsId}")
     public String toDetai(Model model, User user, @PathVariable Long goodsId) {
         model.addAttribute("user", user);
-        model.addAttribute("goods", goodsService.findGoodsVoByGoodsId(goodsId));
+        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+        Date startDate = goodsVo.getStartDate();
+        Date endDate = goodsVo.getEndDate();
+        Date nowDate = new Date();
+        int seckillStatus = 0;  // 秒杀状态
+        int remainSeconds = 0;  // 秒杀倒计时
+        if (nowDate.before(startDate)) {
+            // 秒杀还未开始
+            remainSeconds = ( (int) ( (startDate.getTime() - nowDate.getTime()) / 1000) );
+        }else if (nowDate.after(endDate)) {
+            // 秒杀已结束
+            seckillStatus = 2;
+            remainSeconds = -1;
+        }else {
+            // 秒杀进行中
+            seckillStatus = 1;
+            remainSeconds = 0;
+        }
+        model.addAttribute("remainSeconds", remainSeconds);
+        model.addAttribute("secKillStatus", seckillStatus);
+        model.addAttribute("goods", goodsVo);
         return "goodsDetail";
     }
 }
