@@ -37,7 +37,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private ISeckillOrderService seckillOrderService;
 
-    private static Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
     /**
      * 功能描述：秒杀
      */
@@ -45,7 +44,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Transactional
     public Order seckill(User user, GoodsVo goodsVo) {
 
-        logger.info("OrderServiceImpl进入seckill方法");
         // 秒杀商品表减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
         seckillGoods.setStockCount(seckillGoods.getStockCount() - 1);

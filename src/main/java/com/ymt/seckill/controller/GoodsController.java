@@ -27,7 +27,6 @@ public class GoodsController {
     @Autowired
     private IGoodsService goodsService;
 
-//    private static Logger logger = LoggerFactory.getLogger(GoodsController.class);
     /**
      * 功能描述：跳转商品页面
      * @param model
