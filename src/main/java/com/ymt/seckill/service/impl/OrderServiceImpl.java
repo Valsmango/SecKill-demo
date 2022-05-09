@@ -11,6 +11,8 @@ import com.ymt.seckill.service.IOrderService;
 import com.ymt.seckill.service.ISeckillGoodsService;
 import com.ymt.seckill.service.ISeckillOrderService;
 import com.ymt.seckill.vo.GoodsVo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,12 +37,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private ISeckillOrderService seckillOrderService;
 
+    private static Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
     /**
      * 功能描述：秒杀
      */
     @Override
     @Transactional
     public Order seckill(User user, GoodsVo goodsVo) {
+
+        logger.info("OrderServiceImpl进入seckill方法");
         // 秒杀商品表减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
         seckillGoods.setStockCount(seckillGoods.getStockCount() - 1);
@@ -59,7 +64,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderMapper.insert(order);
         // 生成秒杀订单
         SeckillOrder seckillOrder = new SeckillOrder();
-        seckillOrder.setOrderId(user.getId());
+        seckillOrder.setUserId(user.getId());
         seckillOrder.setGoodsId(goodsVo.getId());
         seckillOrder.setOrderId(order.getId());
         seckillOrderService.save(seckillOrder);
