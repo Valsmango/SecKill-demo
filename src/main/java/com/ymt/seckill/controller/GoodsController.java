@@ -58,7 +58,6 @@ public class GoodsController {
         model.addAttribute("goodsList", goodsService.findGoodsVo());
         return "goodsList";
     }
-
     /**
      * 功能描述：跳转商品详情页
      * @param goodsId

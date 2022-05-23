@@ -91,13 +91,11 @@
 <!--            <artifactId>spring-session-data-redis</artifactId>-->
 <!--            <version>2.6.1</version>-->
 <!--        </dependency>-->
-
-
-
     </dependencies>
 
 
     <!--  这里出现了问题，解决方案为：https://blog.csdn.net/m0_50513629/article/details/121145767?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2.pc_relevant_aa&utm_relevant_index=5  -->
+    <!--  同时，顺便加上了spring-boot-maven-plugin，打包插件，用于打包到Linux系统上   -->
     <build>
         <resources>
             <resource>
@@ -128,5 +126,6 @@
             </plugin>
         </plugins>
     </build>
+
 
 </project>
