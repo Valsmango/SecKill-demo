@@ -96,4 +96,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         return user;
     }
+
+    /**
+     * 功能描述：更新密码
+     * @param userTicket
+     * @param password
+     * @param req
+     * @param resp
+     * @return
+     */
+    @Override
+    public RespBean updatePassword(String userTicket, String password,
+                                   HttpServletRequest req, HttpServletResponse resp) {
+        User user = getUserByCookie(userTicket, req, resp);
+        if (user == null) {
+            throw new GlobalException(RespBeanEnum.MOBILE_NOT_EXIST);
+        }
+        user.setPassword(MD5Util.inputPassToDBPass(password, user.getSalt()));
+        int result = userMapper.updateById(user);
+        if (1 == result) {
+            // 删除Redis
+            redisTemplate.delete("user:" + userTicket);
+            return RespBean.success();
+        }
+        return RespBean.error(RespBeanEnum.PASSWORD_UPDATE_FAIL);
+    }
 }
