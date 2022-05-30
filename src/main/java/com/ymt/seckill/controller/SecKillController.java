@@ -15,6 +15,7 @@ import com.ymt.seckill.vo.RespBeanEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,8 @@ public class SecKillController {
     private ISeckillOrderService seckillOrderService;
     @Autowired
     private IOrderService orderService;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     // 导入logger是因为下面的public String doSeckill(Model model, User user, Long goodsId)写错成了goodId，
     // 所以没办法从goodsDetail.html获得goods.id (<input type="hidden" name="goodsId" th:value="${goods.id}"/>)
@@ -91,8 +94,10 @@ public class SecKillController {
             return RespBean.error(RespBeanEnum.EMPTY_STOCK);
         }
         // 判断是否重复抢购
-        SeckillOrder seckillOrder =
-                seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
+//        SeckillOrder seckillOrder =
+//                seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
+        // 在OrderServiceImpl中，下单的时候同时将信息存入了Redis缓存中，因此，这里不再需要去SQL数据库中查找，直接去Redis中查找
+        SeckillOrder seckillOrder = (SeckillOrder)redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
         if (seckillOrder != null) {
             return RespBean.error(RespBeanEnum.REPEAT_ERROR);
         }
