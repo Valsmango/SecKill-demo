@@ -3,7 +3,9 @@ package com.ymt.seckill.controller;
 import com.ymt.seckill.pojo.User;
 import com.ymt.seckill.service.IGoodsService;
 import com.ymt.seckill.service.IUserService;
+import com.ymt.seckill.vo.DetailVo;
 import com.ymt.seckill.vo.GoodsVo;
+import com.ymt.seckill.vo.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -75,7 +77,7 @@ public class GoodsController {
     @RequestMapping(value = "/toList",produces = "text/html;charset=utf-8")
     @ResponseBody
     public String toList(Model model, User user, HttpServletRequest request, HttpServletResponse response) {
-        // Redus中获取页面，如果不为空，直接返回页面
+        // Redis中获取页面，如果不为空，直接返回页面
         ValueOperations valueOperations = redisTemplate.opsForValue();
         String html = (String) valueOperations.get("goodsList");
         if (!StringUtils.isEmpty(html)) {
@@ -123,45 +125,75 @@ public class GoodsController {
 //        model.addAttribute("goods", goodsVo);
 //        return "goodsDetail";
 //    }
-    // 页面优化：
-    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=utf-8")
-    @ResponseBody
-    public String toDetai(Model model, User user, @PathVariable Long goodsId,
-                          HttpServletRequest request, HttpServletResponse response) {
-        ValueOperations valueOperations = redisTemplate.opsForValue();
-        // Redis中获取页面，如果不为空，直接返回页面
-        String html = (String)valueOperations.get("goodsDetail:" + goodsId);
-        if (!StringUtils.isEmpty(html)) {
-            return html;
-        }
-        model.addAttribute("user", user);
-        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
-        Date startDate = goodsVo.getStartDate();
-        Date endDate = goodsVo.getEndDate();
-        Date nowDate = new Date();
-        int seckillStatus = 0;  // 秒杀状态
-        int remainSeconds = 0;  // 秒杀倒计时
-        if (nowDate.before(startDate)) {
-            // 秒杀还未开始
-            remainSeconds = ( (int) ( (startDate.getTime() - nowDate.getTime()) / 1000) );
-        }else if (nowDate.after(endDate)) {
-            // 秒杀已结束
-            seckillStatus = 2;
-            remainSeconds = -1;
-        }else {
-            // 秒杀进行中
-            seckillStatus = 1;
-            remainSeconds = 0;
-        }
-        model.addAttribute("remainSeconds", remainSeconds);
-        model.addAttribute("secKillStatus", seckillStatus);
-        model.addAttribute("goods", goodsVo);
-        // 如果为空，则手动渲染
-        WebContext context = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
-        html = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", context);
-        if (!StringUtils.isEmpty(html)) {
-            valueOperations.set("goodsDetail:" + goodsId, html, 60, TimeUnit.SECONDS);
-        }
-        return html;
+
+//    // 页面优化：
+//    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=utf-8")
+//    @ResponseBody
+//    public String toDetai(Model model, User user, @PathVariable Long goodsId,
+//                          HttpServletRequest request, HttpServletResponse response) {
+//        ValueOperations valueOperations = redisTemplate.opsForValue();
+//        // Redis中获取页面，如果不为空，直接返回页面
+//        String html = (String)valueOperations.get("goodsDetail:" + goodsId);
+//        if (!StringUtils.isEmpty(html)) {
+//            return html;
+//        }
+//        model.addAttribute("user", user);
+//        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+//        Date startDate = goodsVo.getStartDate();
+//        Date endDate = goodsVo.getEndDate();
+//        Date nowDate = new Date();
+//        int seckillStatus = 0;  // 秒杀状态
+//        int remainSeconds = 0;  // 秒杀倒计时
+//        if (nowDate.before(startDate)) {
+//            // 秒杀还未开始
+//            remainSeconds = ( (int) ( (startDate.getTime() - nowDate.getTime()) / 1000) );
+//        }else if (nowDate.after(endDate)) {
+//            // 秒杀已结束
+//            seckillStatus = 2;
+//            remainSeconds = -1;
+//        }else {
+//            // 秒杀进行中
+//            seckillStatus = 1;
+//            remainSeconds = 0;
+//        }
+//        model.addAttribute("remainSeconds", remainSeconds);
+//        model.addAttribute("secKillStatus", seckillStatus);
+//        model.addAttribute("goods", goodsVo);
+//        // 如果为空，则手动渲染
+//        WebContext context = new WebContext(request, response, request.getServletContext(), request.getLocale(), model.asMap());
+//        html = thymeleafViewResolver.getTemplateEngine().process("goodsDetail", context);
+//        if (!StringUtils.isEmpty(html)) {
+//            valueOperations.set("goodsDetail:" + goodsId, html, 60, TimeUnit.SECONDS);
+//        }
+//        return html;
+
+        // 前后端分离
+        @RequestMapping("/toDetail/{goodsId}")
+        @ResponseBody
+        public RespBean toDetai(Model model, User user, @PathVariable Long goodsId) {
+            GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+            Date startDate = goodsVo.getStartDate();
+            Date endDate = goodsVo.getEndDate();
+            Date nowDate = new Date();
+            int seckillStatus = 0;  // 秒杀状态
+            int remainSeconds = 0;  // 秒杀倒计时
+            if (nowDate.before(startDate)) {
+                // 秒杀还未开始
+                remainSeconds = ( (int) ( (startDate.getTime() - nowDate.getTime()) / 1000) );
+            }else if (nowDate.after(endDate)) {
+                // 秒杀已结束
+                seckillStatus = 2;
+                remainSeconds = -1;
+            }else {
+                // 秒杀进行中
+                seckillStatus = 1;
+                remainSeconds = 0;
+            }
+            DetailVo detailVo = new DetailVo();
+            detailVo.setUser(user);
+            detailVo.setGoodsVo(goodsVo);
+            detailVo.setSeckillStatus(seckillStatus);
+            detailVo.setRemainSeconds(remainSeconds);
+            return RespBean.success(detailVo);
     }
 }

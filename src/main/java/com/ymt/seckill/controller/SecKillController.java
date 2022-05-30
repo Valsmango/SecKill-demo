@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * 功能描述：秒杀
@@ -42,37 +44,61 @@ public class SecKillController {
     //          --> 通过( <form id="seckillForm" method="post" action="/seckill/doSeckill"> )
     //              以及( <input type="hidden" name="goodsId" th:value="${goods.id}"/> ) 控制下一个界面跳转与传参给后端 -->
     //          SecKillController.doSeckill(Model model, User user, Long goodsId) 通过参数列表接收前端参数
+
+//    // 用于打log
 //    private static Logger logger = LoggerFactory.getLogger(SecKillController.class);
     /**
      * 功能描述：秒杀
-     * @param model
      * @param user
      * @param goodsId
      * @return
      */
-    @RequestMapping("/doSeckill")
-    public String doSeckill(Model model, User user, Long goodsId) {
+//    @RequestMapping("/doSeckill")
+//    public String doSeckill(Model model, User user, Long goodsId) {
+//        if (user == null) {
+//            return "login";
+//        }
+//        model.addAttribute("user", user);
+//        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
+//        // 判断库存
+//        if (goodsVo.getStockCount() < 1) {
+//            model.addAttribute("errmsg", RespBeanEnum.EMPTY_STOCK.getMessage());
+//            return "secKillFail";
+//        }
+//        // 判断是否重复抢购
+//        SeckillOrder seckillOrder =
+//                seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
+//        if (seckillOrder != null) {
+//            model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
+//            return "secKillFail";
+//        }
+//        // 抢购成功，下订单
+//        Order order = orderService.seckill(user, goodsVo);
+//        model.addAttribute("order", order);
+//        model.addAttribute("goods", goodsVo);
+//        return "orderDetail";
+//    }
+    // 页面静态化：
+    @RequestMapping(value="/doSeckill", method = RequestMethod.POST)
+    @ResponseBody
+    public RespBean doSeckill(User user, Long goodsId) {
         if (user == null) {
-            return "login";
+            return RespBean.error(RespBeanEnum.SESSION_ERROR);
         }
-        model.addAttribute("user", user);
         GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
         // 判断库存
         if (goodsVo.getStockCount() < 1) {
-            model.addAttribute("errmsg", RespBeanEnum.EMPTY_STOCK.getMessage());
-            return "secKillFail";
+            return RespBean.error(RespBeanEnum.EMPTY_STOCK);
         }
         // 判断是否重复抢购
         SeckillOrder seckillOrder =
                 seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId()).eq("goods_id", goodsId));
         if (seckillOrder != null) {
-            model.addAttribute("errmsg", RespBeanEnum.REPEAT_ERROR.getMessage());
-            return "secKillFail";
+            return RespBean.error(RespBeanEnum.REPEAT_ERROR);
         }
         // 抢购成功，下订单
         Order order = orderService.seckill(user, goodsVo);
-        model.addAttribute("order", order);
-        model.addAttribute("goods", goodsVo);
-        return "orderDetail";
+//        return RespBean.success(order); // 这里传入的order的Id是正确的，但是因为前端js会造成Long类型的精度丢失，所以在这里和order
+        return RespBean.success(order.getId().toString()); // 这里传入的order的Id是正确的！
     }
 }
