@@ -25,6 +25,16 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES />
+        <JAVADOC />
+        <NATIVE>
+          <root url="jar://D:/软件安装包/专业/maven导包失败/spring-boot-starter-amqp-2.6.5.jar!/" />
+        </NATIVE>
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-thymeleaf:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot:2.6.5" level="project" />
@@ -128,5 +138,11 @@
     <orderEntry type="library" name="Maven: io.projectreactor:reactor-core:3.4.16" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-pool2:2.11.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-amqp:2.6.5" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-messaging:5.3.17" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.amqp:spring-rabbit:2.4.3" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.amqp:spring-amqp:2.4.3" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.retry:spring-retry:1.3.2" level="project" />
+    <orderEntry type="library" name="Maven: com.rabbitmq:amqp-client:5.13.1" level="project" />
   </component>
 </module>
