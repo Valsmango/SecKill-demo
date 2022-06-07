@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +59,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional
     public Order seckill(User user, GoodsVo goodsVo) {
+        ValueOperations valueOperations = redisTemplate.opsForValue();
 
         // 秒杀商品表减库存
         SeckillGoods seckillGoods = seckillGoodsService.getOne(new QueryWrapper<SeckillGoods>().eq("goods_id", goodsVo.getId()));
@@ -66,7 +68,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 这里的业务逻辑是有问题的，因为没有考虑并发的情况，并且读、改、写没有原子性
         boolean result = seckillGoodsService.update(new UpdateWrapper<SeckillGoods>().setSql("stock_count = stock_count - 1").eq("goods_id",
                 goodsVo.getId()).gt("stock_count", 0));
-        if (!result) {
+//        if (!result) {
+//            return null;
+//        }
+        if (seckillGoods.getStockCount() < 1) {
+            // 判断是否还有库存
+            valueOperations.set("isStockEmpty:" + goodsVo.getId(), "0");
             return null;
         }
         // 生成订单
@@ -88,7 +95,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         seckillOrder.setOrderId(order.getId());
         seckillOrderService.save(seckillOrder);
         // 使用Redis将秒杀订单信息缓存起来，提高响应速度
-        redisTemplate.opsForValue().set("order:" + user.getId() + ":" + goodsVo.getId(), seckillOrder);
+        valueOperations.set("order:" + user.getId() + ":" + goodsVo.getId(), seckillOrder);
         return order;
     }
 

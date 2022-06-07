@@ -78,16 +78,51 @@
                 data:{
                     goodsId:$("#goodsId").val()
                 },
-                success:function (data) {
+                success: function (data) {
                     if (data.code==200) {
-                        // 这里的data原本应该是order对象的数据，但是js存在Long类型丢失，所以稍作修改为直接传输order.getId().toString()
-                        window.location.href="/orderDetail.htm?orderId=" + data.obj;
+                        // // 这里的data原本应该是order对象的数据，但是js存在Long类型丢失，所以稍作修改为直接传输order.getId().toString()
+                        // window.location.href="/orderDetail.htm?orderId=" + data.obj;
+                        // 增加了RabbitMQ，进行异步操作，返回的是一个排队中（0），但真正是否成功下单，要在这里来轮询
+                        getResult($("#goodsId").val());
                     }else {
                         layer.msg("客户端请求出错");
                     }
                 },
                 error:function (){
                     layer.msg("客户端请求出错");
+                }
+            })
+        }
+        function  getResult(goodsId) {
+            g_showLoading();
+            $.ajax({
+                url:"/seckill/result",
+                type:"GET",
+                data:{
+                    goodsId:goodsId,
+                },
+                success:function(data) {
+                    if (data.code == 200) {
+                        var result = data.obj;
+                        if (result < 0) {
+                            layer.msg("对不起，秒杀失败！");
+                        } else if (result == 0) {
+                            setTimeout(function() {
+                                getResult(goodsId);
+                            }, 50);
+                        } else {
+                            layer.confirm("恭喜您，秒杀成功！是否查看订单？", {btn:["确定", "取消"]},
+                            function () {
+                                window.location.href="/orderDetail.htm?orderId=" + result;  // 这里也要处理一下精度丢失问题
+                            },
+                            function() {
+                                layer.close();
+                            })
+                        }
+                    }
+                },
+                error:function() {
+                    layer.msg("客户端请求错误");
                 }
             })
         }
