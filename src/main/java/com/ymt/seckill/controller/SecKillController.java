@@ -18,6 +18,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,8 @@ public class SecKillController implements InitializingBean {
     private RedisTemplate redisTemplate;
     @Autowired
     private MQSenderSeckill mqSender;
+    @Autowired
+    private RedisScript<Long> script;
 
     private Map<Long, Boolean> emptyStockMap = new HashMap<>(); // 加Redis预减库存是为了降低直接去访问MySQL，而这里用Map是为了将信息存到内存中，减少大量去Redis中访问
 
@@ -139,10 +143,12 @@ public class SecKillController implements InitializingBean {
         if (emptyStockMap.get(goodsId)) {
             return RespBean.error(RespBeanEnum.EMPTY_STOCK);    // 思考：分布式下能不能用？其次，map不是线程安全的，多线程的情况下可以用吗？
         }
-        Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
+//        Long stock = valueOperations.decrement("seckillGoods:" + goodsId);      // redis的递增递减是一个原子性操作？这里直接上的原子性操作？
+        // 这里，尝试不采用原子操作，而采用lua脚本+redisTemplate来执行
+        Long stock = (Long) redisTemplate.execute(script, Collections.singletonList("seckillGoods:" + goodsId), Collections.EMPTY_LIST);
         if (stock < 0) {
             emptyStockMap.put(goodsId, true);
-            valueOperations.increment("seckillGoods:" + goodsId);
+//            valueOperations.increment("seckillGoods:" + goodsId);       // 原子性操作？为什么这个不需要用脚本呢？ 为了解决lua后的超卖问题，这一句要删掉？
             return RespBean.error(RespBeanEnum.EMPTY_STOCK);
         }
         // 抢购成功，下订单(基于RabbitMQ，再MQReceiverSeckill中完成具体的下单逻辑)

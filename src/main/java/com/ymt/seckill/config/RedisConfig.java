@@ -1,9 +1,12 @@
 package com.ymt.seckill.config;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -31,5 +34,15 @@ public class RedisConfig {
         // 注入连接工厂
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         return redisTemplate;
+    }
+
+    // 增加lua脚本后，进行脚本配置
+    @Bean
+    public DefaultRedisScript<Long> script() {
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        // lua脚本位置和application.yml同级目录
+        redisScript.setLocation(new ClassPathResource("stock.lua"));
+        redisScript.setResultType(Long.class);
+        return redisScript;
     }
 }
