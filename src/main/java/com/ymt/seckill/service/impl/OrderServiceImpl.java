@@ -15,6 +15,8 @@ import com.ymt.seckill.service.IGoodsService;
 import com.ymt.seckill.service.IOrderService;
 import com.ymt.seckill.service.ISeckillGoodsService;
 import com.ymt.seckill.service.ISeckillOrderService;
+import com.ymt.seckill.utils.MD5Util;
+import com.ymt.seckill.utils.UUIDUtil;
 import com.ymt.seckill.vo.GoodsVo;
 import com.ymt.seckill.vo.OrderDetailVo;
 import com.ymt.seckill.vo.RespBeanEnum;
@@ -25,8 +27,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -115,6 +119,52 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         detail.setOrder(order);
         detail.setGoodsVo(goodsVo);
         return detail;
+    }
+
+    /**
+     * 功能描述：获取秒杀地址
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @Override
+    public String createPath(User user, Long goodsId) {
+        // 直接用UUID
+        String str = MD5Util.md5(UUIDUtil.uuid() + "123456");
+        // 这种随机生成的地址，直接放Redis里面，并且设置一个失效时间
+        redisTemplate.opsForValue().set("seckillPath:" + user.getId() + ":" + goodsId, str, 60, TimeUnit.SECONDS);
+        return str;
+    }
+
+    /**
+     * 功能描述：校验秒杀地址
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @Override
+    public boolean checkPath(User user, Long goodsId, String path) {
+        if (user == null || goodsId < 0 || StringUtils.isEmpty(path)) {
+            return false;
+        }
+        String redisPath = (String) redisTemplate.opsForValue().get("seckillPath:" + user.getId() + ":" + goodsId);
+        return path.equals(redisPath);
+    }
+
+    /**
+     * 功能描述：校验验证码
+     * @param user
+     * @param goodsId
+     * @param captcha
+     * @return
+     */
+    @Override
+    public Boolean checkCaptcha(User user, Long goodsId, String captcha) {
+        if (StringUtils.isEmpty(captcha) || user == null || goodsId < 0) {
+            return false;
+        }
+        String redisCaptcha = (String) redisTemplate.opsForValue().get("captcha:" + user.getId() + ":" + goodsId);
+        return captcha.equals(redisCaptcha);
     }
 
 }

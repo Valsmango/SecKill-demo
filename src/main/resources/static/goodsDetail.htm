@@ -46,8 +46,20 @@
 <!--                            <button class="btn btn-primary btn-block" type="submit" id="buyButton">立即秒杀</button>-->
 <!--                            <input type="hidden" name="goodsId" id="goodsId"/>-->
 <!--                        </form>-->
-                        <button class="btn btn-primary btn-block" type="button" id="buyButton" onclick="doSeckill()">立即秒杀</button>
-                        <input type="hidden" name="goodsId" id="goodsId">
+<!--          要修改button的格式，才方便引入验证码             -->
+<!--                        <button class="btn btn-primary btn-block" type="button" id="buyButton" onclick="getSeckillPath()">立即秒杀-->
+<!--                            <input type="hidden" name="goodsId" id="goodsId">-->
+<!--                        </button>-->
+<!--          引入验证码              -->
+                        <div class="row">
+                            <div class="form-inline">
+                                <img id="captchaImg" width="130" height="32"  onclick="refreshCaptcha()" style="display: none"/>
+                                <input id="captcha" class="form-control" style="display: none">
+                                <button class="btn btn-primary" type="button" id="buyButton" onclick="getSeckillPath()">立即秒杀
+                                    <input type="hidden" name="goodsId" id="goodsId">
+                                </button>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -71,11 +83,40 @@
             getDetails();
         });
 
-        function doSeckill() {
+        function getSeckillPath() {
+            var goodsId = $("#goodsId").val();
+            var captcha = $("#captcha").val();
+            g_showLoading();
             $.ajax({
-                url:'/seckill/doSeckill',
+                url:"/seckill/path",
+                type:"GET",
+                data:{
+                    goodsId:goodsId,
+                    // 验证码要正确才能获得正确的秒杀接口地址
+                    captcha:captcha
+                },
+                success: function (data) {
+                    if (data.code == 200) {
+                        var path = data.obj;
+                        doSeckill(path);
+                    } else {
+                        layer.msg(data.message);
+                    }
+                },
+                error: function () {
+                    layer.msg("客户端请求错误");
+                }
+            })
+        }
+        function doSeckill(path) {
+            $.ajax({
+                url:'/seckill/' + path + '/doSeckill',
                 type: 'POST',
                 data:{
+                    // 可以直接按下面的方式来
+                    // goodsId:$("#goodsId").val(),
+                    // path:path
+                    // 这里尝试用@PathVariable注解来接收
                     goodsId:$("#goodsId").val()
                 },
                 success: function (data) {
@@ -85,7 +126,7 @@
                         // 增加了RabbitMQ，进行异步操作，返回的是一个排队中（0），但真正是否成功下单，要在这里来轮询
                         getResult($("#goodsId").val());
                     }else {
-                        layer.msg("客户端请求出错");
+                        layer.msg(data.message);
                     }
                 },
                 error:function (){
@@ -167,8 +208,7 @@
         function countDown(){
             var remainSeconds = $("#remainSeconds").val();
             var timeout;
-            //秒杀还没开始，倒计时
-            if(remainSeconds > 0){
+            if(remainSeconds > 0){  //秒杀还没开始，倒计时
                 $("#buyButton").attr("disabled", true);
                 $("#seckillTip").html("秒杀倒计时："+remainSeconds+"秒");
                 timeout = setTimeout(function(){
@@ -176,18 +216,28 @@
                     $("#remainSeconds").val(remainSeconds - 1);
                     countDown();
                 },1000);
-                //秒杀进行中
-            }else if(remainSeconds == 0){
+            }else if(remainSeconds == 0){   //秒杀进行中
                 $("#buyButton").attr("disabled", false);
                 if(timeout){
                     clearTimeout(timeout);
                 }
                 $("#seckillTip").html("秒杀进行中");
-                //秒杀已经结束
-            }else{
+                // 从后端获取验证码，并显示
+                $("#captchaImg").attr("src", "/seckill/captcha?goodsId=" + $("#goodsId").val() + "&time=" + new Date());    //再次refresh，因为验证码要点一下才能显示……
+                $("#captchaImg").show();
+                $("#captcha").show();
+
+            }else{  //秒杀已经结束
                 $("#buyButton").attr("disabled", true);
                 $("#seckillTip").html("秒杀已经结束");
+                // 验证码再次隐藏
+                $("#captchaImg").hide();
+                $("#captcha").hide();
             }
+        }
+
+        function refreshCaptcha() {
+            $("#captchaImg").attr("src", "/seckill/captcha?goodsId=" + $("#goodsId").val() + "&time=" + new Date());
         }
     </script>
 </html>

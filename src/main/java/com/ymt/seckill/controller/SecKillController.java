@@ -2,6 +2,9 @@ package com.ymt.seckill.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.rabbitmq.tools.json.JSONUtil;
+import com.wf.captcha.ArithmeticCaptcha;
+import com.ymt.seckill.config.AccessLimit;
+import com.ymt.seckill.exception.GlobalException;
 import com.ymt.seckill.pojo.*;
 import com.ymt.seckill.rabbitmq.MQSenderSeckill;
 import com.ymt.seckill.service.IGoodsService;
@@ -12,6 +15,7 @@ import com.ymt.seckill.utils.JsonUtil;
 import com.ymt.seckill.vo.GoodsVo;
 import com.ymt.seckill.vo.RespBean;
 import com.ymt.seckill.vo.RespBeanEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -22,18 +26,24 @@ import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 功能描述：秒杀
  */
+@Slf4j
 @Controller
 @RequestMapping("/seckill")
 public class SecKillController implements InitializingBean {
@@ -126,13 +136,18 @@ public class SecKillController implements InitializingBean {
 //    }
 
     // 进行接口优化
-    @RequestMapping(value="/doSeckill", method = RequestMethod.POST)
+    @RequestMapping(value="/{path}/doSeckill", method = RequestMethod.POST)
     @ResponseBody
-    public RespBean doSeckill(Model model, User user, Long goodsId) {
+    public RespBean doSeckill(@PathVariable String path, User user, Long goodsId) {
         if (user == null) {
             return RespBean.error(RespBeanEnum.SESSION_ERROR);
         }
         ValueOperations valueOperations = redisTemplate.opsForValue();
+        // 校验秒杀接口地址：将path顺便拿过来进行判断，判断秒杀地址是否正确
+        boolean check = orderService.checkPath(user, goodsId, path);
+        if (!check) {
+            return RespBean.error(RespBeanEnum.REQUEST_ILLEGAL);
+        }
         // 判断是否重复抢购
         SeckillOrder seckillOrder = (SeckillOrder)redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsId);
         if (seckillOrder != null) {
@@ -172,7 +187,6 @@ public class SecKillController implements InitializingBean {
         Long orderId = seckillOrderService.getResult(user, goodsId);
         return RespBean.success(orderId.toString());
     }
-
     /**
      * 系统初始化，把商品库存数量加载到Redis
      */
@@ -188,4 +202,65 @@ public class SecKillController implements InitializingBean {
         });
 
     }
+
+    /**
+     * 功能描述：获取秒杀地址
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @AccessLimit(second = 5, maxCount = 5, needLogin = true)
+    @RequestMapping(value = "/path", method = RequestMethod.GET)
+    @ResponseBody
+    public RespBean getPath(User user, Long goodsId, String captcha, HttpServletRequest request) {
+        if (user == null) {
+            return RespBean.error(RespBeanEnum.SESSION_ERROR);
+        }
+        // 在校验验证码的基础上，还需要进行计数器方式的限流，也就是限制访问次数，例如5秒内访问5次（这里的业务逻辑也就是注解@AccessLimit()的基础）
+//        ValueOperations valueOperations = redisTemplate.opsForValue();
+//        String uri = request.getRequestURI();
+//        captcha = "0";  // 这一句是为了方便测试，让captcha的正确值为0，不管前端显示的验证码实际结果为多少，只要输入0就算对。。。
+//        Integer count = (Integer) valueOperations.get(uri + ":" + user.getId());
+//        if (count == null) {
+//            valueOperations.set(uri + ":" + user.getId(), 1, 5, TimeUnit.SECONDS);
+//        } else if (count < 5) {
+//            valueOperations.increment(uri + ":" + user.getId());
+//        } else {
+//            return RespBean.error(RespBeanEnum.ACCESS_LIMIT_REACHED);
+//        }
+        // 校验验证码
+        Boolean check = orderService.checkCaptcha(user, goodsId, captcha);
+        if (!check) {
+            return RespBean.error(RespBeanEnum.ERROR_CAPTCHA);
+        }
+        String str = orderService.createPath(user, goodsId);
+        return RespBean.success(str);
+    }
+
+    /**
+     * 功能描述：验证码接口
+     * @param user
+     * @param goodsId
+     * @param response
+     */
+    @RequestMapping(value = "/captcha", method = RequestMethod.GET)
+    public void verifyCode(User user, Long goodsId, HttpServletResponse response) {
+        if (user == null || goodsId < 0) {
+            throw new GlobalException(RespBeanEnum.REQUEST_ILLEGAL);
+        }
+        // 设置请求头为输出图片的类型：https://gitee.com/ele-admin/EasyCaptcha?_from=gitee_search
+        response.setContentType("image/jpg");
+        response.setHeader("Pragma", "No-cache");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setDateHeader("Expires", 0);
+        // 生成验证码，将结果放在Redis里面
+        ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 32, 3);
+        redisTemplate.opsForValue().set("captcha:" + user.getId() + ":" + goodsId, captcha.text(), 300, TimeUnit.SECONDS);
+        try {
+            captcha.out(response.getOutputStream());
+        } catch (IOException e) {
+            log.error("验证码生成失败：", e.getMessage());
+        }
+    }
+
 }
