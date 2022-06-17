@@ -38,7 +38,7 @@ public class SeckillOrderServiceImpl extends ServiceImpl<SeckillOrderMapper, Sec
                 user.getId()).eq("goods_id", goodsId));
         if (seckillOrder != null) {
             return seckillOrder.getOrderId();
-        } else if (redisTemplate.hasKey("isSticjEmpty:" + goodsId)) {
+        } else if (redisTemplate.hasKey("isStockEmpty:" + goodsId)) {
             return -1L;
         } else {
             return 0L;

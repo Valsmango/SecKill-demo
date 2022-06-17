@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RespBean {
-    private long code;
+    private long ajax_1;
     private String message;
     private Object obj;
 
@@ -34,7 +34,7 @@ public class RespBean {
     public static RespBean error() {
         return new RespBean(RespBeanEnum.ERROR.getCode(),  RespBeanEnum.ERROR.getMessage(), null);
     }
-    public static RespBean error(RespBeanEnum respBeanEnum) {
+    public static RespBean error(RespBeanEnum respBeanEnum) {     // 和utils类相似，方法得是静态的，因为到处都要调用
         return new RespBean(respBeanEnum.getCode(), respBeanEnum.getMessage(),null);
     }
 }

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>登录</title>
+    <!--  导入库文件  -->
     <!-- jquery -->
     <script type="text/javascript" th:src="@{/js/jquery.min.js}"></script>
     <!-- bootstrap -->
@@ -55,7 +56,7 @@
 </form>
 </body>
 <script>
-    function login() {
+    function login() {      //问题1：为什么不直接调用doLogin()？而要走一层login()呢？
         $("#loginForm").validate({
             submitHandler: function (form) {
                 doLogin();
@@ -64,9 +65,9 @@
     }
 
     function doLogin() {
-        g_showLoading();
+        g_showLoading();    // 来自common.js
         var inputPass = $("#password").val();
-        var salt = g_passsword_salt;
+        var salt = g_passsword_salt;    // 来自common.js，值为"1a2b3c4d"
         var str = "" + salt.charAt(0) + salt.charAt(2) + inputPass + salt.charAt(5) + salt.charAt(4);
         var password = md5(str);
         $.ajax({
@@ -78,7 +79,7 @@
             },
             success: function (data) {
                 layer.closeAll();
-                if (data.code == 200) {
+                if (data.code == 200) { // 这个code来自于"/login/doLogin"最后返回的RespBean.success(ticket/uuid);
                     layer.msg("成功");
                     window.location.href = "/goods/toList";
                 } else {

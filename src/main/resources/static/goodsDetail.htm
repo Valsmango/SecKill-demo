@@ -78,7 +78,7 @@
         </div>
     </body>
     <script>
-        $(function(){
+        $(function(){   // 跳转这个页面后就会自动触发？
             // countDown();
             getDetails();
         });
@@ -134,7 +134,7 @@
                 }
             })
         }
-        function  getResult(goodsId) {
+        function getResult(goodsId) {
             g_showLoading();
             $.ajax({
                 url:"/seckill/result",

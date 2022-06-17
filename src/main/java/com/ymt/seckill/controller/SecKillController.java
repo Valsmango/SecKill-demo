@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Controller
 @RequestMapping("/seckill")
-public class SecKillController implements InitializingBean {
+public class SecKillController implements InitializingBean {    // 为什么要implements InitializingBean接口呢？
 
     @Autowired
     private IGoodsService goodsService;

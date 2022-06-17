@@ -100,7 +100,7 @@ public class GoodsController {
      * @return
      */
 //    @RequestMapping("/toDetail/{goodsId}")
-//    public String toDetai(Model model, User user, @PathVariable Long goodsId) {
+//    public String toDetail(Model model, User user, @PathVariable Long goodsId) {
 //        model.addAttribute("user", user);
 //        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
 //        Date startDate = goodsVo.getStartDate();
@@ -129,7 +129,7 @@ public class GoodsController {
 //    // 页面优化：
 //    @RequestMapping(value = "/toDetail/{goodsId}", produces = "text/html;charset=utf-8")
 //    @ResponseBody
-//    public String toDetai(Model model, User user, @PathVariable Long goodsId,
+//    public String toDetail(Model model, User user, @PathVariable Long goodsId,
 //                          HttpServletRequest request, HttpServletResponse response) {
 //        ValueOperations valueOperations = redisTemplate.opsForValue();
 //        // Redis中获取页面，如果不为空，直接返回页面
@@ -170,7 +170,7 @@ public class GoodsController {
         // 前后端分离
         @RequestMapping("/toDetail/{goodsId}")
         @ResponseBody
-        public RespBean toDetai(Model model, User user, @PathVariable Long goodsId) {
+        public RespBean toDetail(Model model, User user, @PathVariable Long goodsId) {
             GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
             Date startDate = goodsVo.getStartDate();
             Date endDate = goodsVo.getEndDate();

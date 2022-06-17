@@ -4,6 +4,7 @@ import com.ymt.seckill.validator.IsMobile;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
+
 import javax.validation.constraints.NotNull;
 
 /**

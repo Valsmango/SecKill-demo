@@ -45,15 +45,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 1，首先校验是否输入为空/不是手机号格式
         String mobile = loginVo.getMobile();
         String password = loginVo.getPassword();
-//        // 因为修改为了注解形式，不再需要以下部分
-//        if (StringUtils.isEmpty(mobile) || StringUtils.isEmpty(password)) {
-//            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
-//        }
-//        if(ValidationUtil.isMobile(mobile)) {
-//            return RespBean.error(RespBeanEnum.MOBILE_ERROR);
-//        }
         // 2，根据手机号获取数据库中的用户（看是否找得到）
-        User user = userMapper.selectById(mobile);
+        User user = userMapper.selectById(mobile);  // MyBatis Plus的通用接口，所以在UserMapper中就不用重复写了
         if (null == user) {
 //            // 可以改为抛出全局异常，所以不再直接返回RespBean对象了，而交给exception类下的GlobalExceptionHandler来进行异常处理
 //            return RespBean.error(RespBeanEnum.LOGIN_ERROR);
@@ -72,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //        req.getSession().setAttribute(ticket, user);
 //        CookieUtil.setCookie(req, resp, "userTicket", ticket);
 //        // 改为分布式Session（方法二）
-        String ticket = UUIDUtil.uuid();
+        String ticket = UUIDUtil.uuid();    //UUID 让分布式系统中的所有元素，都能有唯一的辨识信息，而不需要通过中央控制端来做辨识信息的指定
         redisTemplate.opsForValue().set("user:" + ticket, user);
         CookieUtil.setCookie(req, resp, "userTicket", ticket);
 
